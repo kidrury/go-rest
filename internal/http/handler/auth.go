@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"crypto/sha256"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -61,11 +59,6 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) error {
 			Message: "authentication required",
 		}
 	}
-
-	fmt.Printf("REFRESH cookie value: %s\n", cookie.Value)
-
-	cookieHash := sha256.Sum256([]byte(cookie.Value))
-	fmt.Printf("REFRESH cookie hash: %x\n", cookieHash)
 
 	result, err := h.authService.Refresh(r.Context(), cookie.Value)
 	if err != nil {
