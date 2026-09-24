@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/kidrury/rest-pro/internal/auth"
@@ -30,13 +31,19 @@ func NewUserHandler(userService *service.UserService) *UserHandler {
 	}
 }
 
-func CreateUser(w http.ResponseWriter, r *http.Request) error {
+func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) error {
 	var decoded CreateUserRequest
 	if err := DecodeJSON(w, r, &decoded); err != nil {
 		return err
 	}
 
 	if err := validation.Struct(decoded); err != nil {
+		return err
+	}
+
+	fmt.Println("Creating user with email:", decoded.Email)
+	err := h.userService.CreateUser(r.Context(), decoded.Email, decoded.Password)
+	if err != nil {
 		return err
 	}
 

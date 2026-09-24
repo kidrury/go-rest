@@ -20,6 +20,14 @@ func NewUserRepository(pool *pgxpool.Pool) *UserRepository {
 	}
 }
 
+func (r *UserRepository) CreateUser(ctx context.Context, user domain.User) error {
+	// query := `
+	// 	INSERT INTO users (id, email, password_hash, role, created_at)
+	// 	VALUES ($1, $2, $3, $4, $5)
+	// `
+	// _, err := r.pool.Exec(ctx, query, user.ID, user.Email, user.PasswordHash, user.Role, user.CreatedAt)
+	return nil
+}
 func (r *UserRepository) GetUserByID(ctx context.Context, userID string) (domain.User, error) {
 	query := `
 		SELECT

@@ -64,7 +64,7 @@ func New(config config.Config) (*App, error) {
 
 	mux.Handle(
 		"POST /user",
-		handler.HandlerFunc(handler.CreateUser),
+		handler.HandlerFunc(userHandler.CreateUser),
 	)
 	mux.Handle(
 		"GET /user/{id}",

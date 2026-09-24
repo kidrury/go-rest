@@ -3,24 +3,57 @@ package service
 import (
 	"context"
 	"errors"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/kidrury/rest-pro/internal/auth"
 	"github.com/kidrury/rest-pro/internal/authz"
 	"github.com/kidrury/rest-pro/internal/domain"
 )
 
 type UserRepository interface {
+	CreateUser(ctx context.Context, user domain.User) error
 	GetUserByID(ctx context.Context, userID string) (domain.User, error)
 }
 
 type UserService struct {
-	user UserRepository
+	user    UserRepository
+	session SessionRepository
 }
 
-func NewUserService(userRepo UserRepository) *UserService {
+func NewUserService(userRepo UserRepository, sessionRepo SessionRepository) *UserService {
 	return &UserService{
-		user: userRepo,
+		user:    userRepo,
+		session: sessionRepo,
 	}
+}
+
+type CreateResult struct {
+	AccessToken  string
+	RefreshToken string
+	RefreshUntil time.Time
+}
+
+func (s *UserService) CreateUser(ctx context.Context, email, password string) error {
+	passwordHash, err := auth.HashPassword(password)
+	if err != nil {
+		return err
+	}
+
+	auth.GenerateRefreshToken()
+
+	newUser := domain.User{
+		ID:           uuid.NewString(),
+		Email:        email,
+		PasswordHash: passwordHash,
+		Role:         "user",
+	}
+
+	err = s.user.CreateUser(ctx, newUser)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *UserService) GetUserByID(ctx context.Context, actor auth.Identity, targetUserID string) (domain.User, error) {
