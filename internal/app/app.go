@@ -92,7 +92,7 @@ func New(config config.Config) (*App, error) {
 	)
 
 	root := middleware.Recover(mux)
-	root = middleware.Log(mux)
+	root = middleware.Log(root)
 	root = middleware.RequestID(root)
 
 	app := &App{
