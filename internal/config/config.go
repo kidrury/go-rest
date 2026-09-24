@@ -47,7 +47,7 @@ func environmentEnv() (string, error) {
 	case "development", "production":
 		return val, nil
 	default:
-		return "", errors.New("ENVIRONMENT must be development or production")
+		return "", errors.New("ENV must be development or production")
 	}
 }
 
@@ -61,9 +61,9 @@ func Load() (*Config, error) {
 
 	jwtAudience := envOrDefault("JWT_AUDIENCE", "shmucks_who_use")
 
-	accessTokenTTL, err := time.ParseDuration(envOrDefault("ACCESS_TOKEN_TTL_M", "1m"))
+	accessTokenTTL, err := time.ParseDuration(envOrDefault("ACCESS_TOKEN_TTL", "1m"))
 	if err != nil {
-		return &Config{}, errors.New("ACCESS_TOKEN_TTL_M must be a valid duration")
+		return &Config{}, errors.New("ACCESS_TOKEN_TTL must be a valid duration")
 	}
 
 	refreshTokenTTL, err := time.ParseDuration(envOrDefault("REFRESH_TOKEN_TTL", "720h"))
@@ -86,9 +86,9 @@ func Load() (*Config, error) {
 		return &Config{}, errors.New("TLS_ENABLED must be true or false")
 	}
 
-	shutdownTimeout, err := time.ParseDuration(envOrDefault("SHUTDOWN_TIMEOUT_S", "10s"))
+	shutdownTimeout, err := time.ParseDuration(envOrDefault("SHUTDOWN_TIMEOUT", "10s"))
 	if err != nil {
-		return &Config{}, errors.New("SHUTDOWN_TIMEOUT_S must be a valid duration")
+		return &Config{}, errors.New("SHUTDOWN_TIMEOUT must be a valid duration")
 	}
 
 	environment, err := environmentEnv()
