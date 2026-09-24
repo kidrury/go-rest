@@ -61,10 +61,6 @@ func New(config config.Config) (*App, error) {
 
 	mux.HandleFunc("GET /health/live", handler.Live)
 	mux.HandleFunc("GET /health/ready", handler.Ready)
-	mux.HandleFunc("GET /health/notexist", handler.NotExistTest)
-	mux.HandleFunc("GET /health/created", handler.CreatedTest)
-	mux.HandleFunc("GET /health/panic", handler.PanicTest)
-	mux.HandleFunc("GET /health/panic-after-write", handler.PanicAfterWriteTest)
 
 	mux.Handle(
 		"POST /user",
