@@ -93,7 +93,7 @@ func Load() (*Config, error) {
 
 	environment, err := environmentEnv()
 	if err != nil {
-		return &Config{}, errors.New("SHUTDOWN_TIMEOUT_S must be a valid duration")
+		return &Config{}, err
 	}
 
 	config := &Config{
