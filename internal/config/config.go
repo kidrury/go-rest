@@ -57,9 +57,9 @@ func Load() (*Config, error) {
 		return &Config{}, err
 	}
 
-	jwtIssuer := envOrDefault("JWT_ISSUER", "issued_by_alireza")
+	jwtIssuer := envOrDefault("JWT_ISSUER", "rest-issuer")
 
-	jwtAudience := envOrDefault("JWT_AUDIENCE", "shmucks_who_use")
+	jwtAudience := envOrDefault("JWT_AUDIENCE", "rest-audience")
 
 	accessTokenTTL, err := time.ParseDuration(envOrDefault("ACCESS_TOKEN_TTL", "1m"))
 	if err != nil {
