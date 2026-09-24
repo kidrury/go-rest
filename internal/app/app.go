@@ -67,10 +67,6 @@ func New(config config.Config) (*App, error) {
 		handler.HandlerFunc(handler.CreateUser),
 	)
 	mux.Handle(
-		"POST /validate",
-		handler.HandlerFunc(handler.TestValidation),
-	)
-	mux.Handle(
 		"GET /user/{id}",
 		middleware.Auth(tm)(handler.HandlerFunc(userHandler.GetUser)),
 	)
