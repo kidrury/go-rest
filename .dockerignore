@@ -1,0 +1,16 @@
+.git
+.github
+.vscode
+
+.env
+.env.test
+
+.gitignore
+
+*.crt
+*.key
+*.pem
+
+bin
+dist
+tmp

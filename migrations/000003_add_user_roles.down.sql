@@ -1,0 +1,5 @@
+ALTER TABLE users
+DROP CONSTRAINT user_role_check;
+
+ALTER TABLE users
+DROP COLUMN role;

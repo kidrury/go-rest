@@ -1,0 +1,4 @@
+{
+    "go.testEnvFile": "${workspaceFolder}/.env.test",
+    "go.testTags": "integration"
+}

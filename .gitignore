@@ -1,0 +1,29 @@
+# Environment files
+.env
+.env.*
+!.env.example
+!.env.test.example
+
+# Go build output
+/bin/
+/dist/
+/out/
+
+# Test/build artifacts
+*.test
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Coverage
+coverage.out
+coverage.html
+
+# IDE
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

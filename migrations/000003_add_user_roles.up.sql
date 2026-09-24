@@ -1,0 +1,6 @@
+ALTER TABLE users
+ADD COLUMN role TEXT NOT NULL DEFAULT 'user';
+
+ALTER TABLE users
+ADD CONSTRAINT user_role_check
+CHECK (role IN ('user', 'admin'));
