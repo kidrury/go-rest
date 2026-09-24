@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/kidrury/rest-pro/internal/auth"
@@ -35,16 +34,10 @@ func NewUserHandler(userService *service.UserService) *UserHandler {
 func CreateUser(w http.ResponseWriter, r *http.Request) error {
 	var decoded CreateUserRequest
 	if err := DecodeJSON(w, r, &decoded); err != nil {
-		// w.WriteHeader(http.StatusBadRequest)
-		// json.NewEncoder(w).Encode(err)
 		return err
 	}
 
-	fmt.Println("still going")
 	if err := validation.Struct(decoded); err != nil {
-		fmt.Println(err)
-		// w.WriteHeader(http.StatusBadRequest)
-		// json.NewEncoder(w).Encode(err)
 		return err
 	}
 
@@ -80,52 +73,9 @@ func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) error {
 }
 
 func ListUsers(w http.ResponseWriter, r *http.Request) error {
-	// q, err := ParseQuery(r)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// err = q.RejectUnknown("limit", "offset", "goated")
-	// if err != nil {
-	// 	return err
-	// }
-
-	// limit, err := q.Int64("limit", 50)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// offset, err := q.Int64("offset", 10)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// goated, err := q.Bool("goated")
-	// if err != nil {
-	// 	return err
-	// }
-
-	// params := ListUsersQuery{
-	// 	Limit:  limit,
-	// 	Offset: offset,
-	// }
-
-	// err = validation.Struct(params)
-
-	// if err != nil {
-	// 	return err
-	// }
-
+	//under construction :D
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-
-	// fmt.Fprintf(
-	// 	w,
-	// 	`{"limit":%d,"offset":%d, "goated":%v}`,
-	// 	limit,
-	// 	offset,
-	// 	goated,
-	// )
 
 	return json.NewEncoder(w).Encode(map[string]any{"success": "true"})
 
