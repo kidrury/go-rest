@@ -12,9 +12,23 @@ import (
 )
 
 type fakeUserRepository struct {
-	users       map[string]domain.User
-	getUserErr  error
-	requestedID string
+	users         map[string]domain.User
+	getUserErr    error
+	requestedID   string
+	createUserErr error
+}
+
+func (f *fakeUserRepository) CreateUser(
+	ctx context.Context,
+	user domain.User,
+) error {
+	if f.createUserErr != nil {
+		return f.createUserErr
+	}
+
+	f.users[user.ID] = user
+
+	return nil
 }
 
 func (f *fakeUserRepository) GetUserByID(
@@ -56,7 +70,7 @@ func TestUserServiceGetUserByIDSelf(t *testing.T) {
 	}
 
 	repo := newFakeUserRepository(actor)
-	service := NewUserService(repo)
+	service := NewUserService(repo, &fakeSessionRepository{})
 
 	identity := auth.Identity{
 		UserID: actor.ID,
@@ -110,7 +124,10 @@ func TestUserServiceGetUserByIDUserCannotReadOtherUser(t *testing.T) {
 	}
 
 	repo := newFakeUserRepository(actor, target)
-	service := NewUserService(repo)
+	service := NewUserService(
+		repo,
+		&fakeSessionRepository{},
+	)
 
 	identity := auth.Identity{
 		UserID: actor.ID,
@@ -153,7 +170,10 @@ func TestUserServiceAdminCanReadOtherUser(t *testing.T) {
 	}
 
 	repo := newFakeUserRepository(actor, target)
-	service := NewUserService(repo)
+	service := NewUserService(
+		repo,
+		&fakeSessionRepository{},
+	)
 
 	identity := auth.Identity{
 		UserID: actor.ID,
@@ -179,7 +199,10 @@ func TestUserServiceAdminCanReadOtherUser(t *testing.T) {
 
 func TestUserServiceActorNotFound(t *testing.T) {
 	repo := newFakeUserRepository()
-	service := NewUserService(repo)
+	service := NewUserService(
+		repo,
+		&fakeSessionRepository{},
+	)
 
 	identity := auth.Identity{
 		UserID: "missing-user",
@@ -215,7 +238,7 @@ func TestUserServiceRepositoryFailure(t *testing.T) {
 		getUserErr: repositoryErr,
 	}
 
-	service := NewUserService(repo)
+	service := NewUserService(repo, &fakeSessionRepository{})
 
 	identity := auth.Identity{
 		UserID: "user-123",
@@ -274,7 +297,7 @@ func TestUserServiceRequirePermission(t *testing.T) {
 			}
 
 			repo := newFakeUserRepository(user)
-			service := NewUserService(repo)
+			service := NewUserService(repo, &fakeSessionRepository{})
 
 			err := service.RequirePermission(
 				context.Background(),

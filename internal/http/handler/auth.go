@@ -15,6 +15,11 @@ type LoginRequest struct {
 	Password string `json:"password" validate:"required,min=7"`
 }
 
+type RegisterRequest struct {
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=7"`
+}
+
 type AuthHandler struct {
 	authService *service.AuthService
 	jwtTTL      time.Duration
@@ -25,6 +30,30 @@ func NewAuthHandler(s *service.AuthService, ttl time.Duration) *AuthHandler {
 		authService: s,
 		jwtTTL:      ttl,
 	}
+}
+
+func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) error {
+	var registerRequest RegisterRequest
+	err := DecodeJSON(w, r, &registerRequest)
+	if err != nil {
+		return err
+	}
+
+	err = validation.Struct(registerRequest)
+	if err != nil {
+		return err
+	}
+
+	result, err := h.authService.Register(r.Context(), registerRequest.Email, registerRequest.Password)
+	if err != nil {
+		return err
+	}
+
+	response.SetAccessCookie(w, result.AccessToken, h.jwtTTL)
+	response.SetRefreshCookie(w, result.RefreshToken, time.Until(result.RefreshUntil))
+
+	w.WriteHeader(http.StatusCreated)
+	return nil
 }
 
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) error {

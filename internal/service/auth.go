@@ -16,6 +16,7 @@ import (
 
 type AuthUserRepository interface {
 	GetUserByEmail(ctx context.Context, email string) (domain.User, error)
+	CreateUser(ctx context.Context, user domain.User) error
 }
 
 type SessionRepository interface {
@@ -60,6 +61,64 @@ func NewAuthService(r AuthUserRepository, s SessionRepository, tm *auth.TokenMan
 		refreshIdleTTL:  idleTTL,
 		tokenManager:    tm,
 		dummyHash:       dh,
+	}, nil
+}
+
+func (s *AuthService) Register(
+	ctx context.Context,
+	email string,
+	password string,
+) (LoginResult, error) {
+	email = strings.ToLower(strings.TrimSpace(email))
+
+	now := time.Now()
+
+	passwordHash, err := auth.HashPassword(password)
+	if err != nil {
+		return LoginResult{}, fmt.Errorf("hash password: %w", err)
+	}
+
+	user := domain.User{
+		ID:           uuid.NewString(),
+		Email:        email,
+		PasswordHash: passwordHash,
+		Role:         "user",
+		CreatedAt:    now,
+	}
+
+	refreshUntil := now.Add(s.refreshTokenTTL)
+
+	refreshToken, refreshTokenHash, err := auth.GenerateRefreshToken()
+	if err != nil {
+		return LoginResult{}, fmt.Errorf("generate refresh token: %w", err)
+	}
+
+	if err := s.users.CreateUser(ctx, user); err != nil {
+		return LoginResult{}, fmt.Errorf("create user: %w", err)
+	}
+
+	session := domain.AuthSession{
+		ID:               uuid.NewString(),
+		FamilyID:         uuid.NewString(),
+		UserID:           user.ID,
+		RefreshTokenHash: refreshTokenHash,
+		CreatedAt:        now,
+		ExpiresAt:        refreshUntil,
+	}
+
+	if err := s.sessions.Create(ctx, session); err != nil {
+		return LoginResult{}, fmt.Errorf("create auth session: %w", err)
+	}
+
+	accessToken, err := s.tokenManager.IssueAccessToken(user.ID)
+	if err != nil {
+		return LoginResult{}, fmt.Errorf("issue access token: %w", err)
+	}
+
+	return LoginResult{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		RefreshUntil: refreshUntil,
 	}, nil
 }
 

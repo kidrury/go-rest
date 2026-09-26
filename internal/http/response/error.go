@@ -27,6 +27,8 @@ func statusFromError(err error) int {
 		switch domainError.Code {
 		case "NOT_FOUND":
 			return http.StatusNotFound
+		case "CONFLICT":
+			return http.StatusConflict
 		case "INVALID_REQUEST":
 			return http.StatusBadRequest
 		case "VALIDATION_FAILED":

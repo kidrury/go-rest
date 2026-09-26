@@ -15,6 +15,23 @@ type fakeAuthUserRepository struct {
 	user          domain.User
 	getByEmailErr error
 	gotEmail      string
+
+	createUserErr error
+	createdUser   *domain.User
+}
+
+func (f *fakeAuthUserRepository) CreateUser(
+	ctx context.Context,
+	user domain.User,
+) error {
+	if f.createUserErr != nil {
+		return f.createUserErr
+	}
+
+	copyUser := user
+	f.createdUser = &copyUser
+
+	return nil
 }
 
 func (f *fakeAuthUserRepository) GetUserByEmail(
@@ -134,6 +151,130 @@ func newTestAuthService(
 	}
 
 	return service
+}
+
+func TestAuthServiceRegister(t *testing.T) {
+	const password = "correct-password"
+
+	users := &fakeAuthUserRepository{
+		getByEmailErr: domain.ErrUserNotFound,
+	}
+
+	sessions := &fakeSessionRepository{}
+
+	service := newTestAuthService(
+		t,
+		users,
+		sessions,
+	)
+
+	before := time.Now()
+
+	result, err := service.Register(
+		context.Background(),
+		"  USER@Example.com  ",
+		password,
+	)
+	if err != nil {
+		t.Fatalf("Register() error = %v", err)
+	}
+
+	after := time.Now()
+
+	if result.AccessToken == "" {
+		t.Fatal("Register() returned empty access token")
+	}
+
+	if result.RefreshToken == "" {
+		t.Fatal("Register() returned empty refresh token")
+	}
+
+	if users.createdUser == nil {
+		t.Fatal("Register() did not create a user")
+	}
+
+	user := users.createdUser
+
+	if user.ID == "" {
+		t.Fatal("created user ID is empty")
+	}
+
+	if user.Email != "user@example.com" {
+		t.Fatalf(
+			"created user email = %q, want %q",
+			user.Email,
+			"user@example.com",
+		)
+	}
+
+	if user.PasswordHash == "" {
+		t.Fatal("created user password hash is empty")
+	}
+
+	if user.PasswordHash == password {
+		t.Fatal("password was stored in plaintext")
+	}
+
+	if err := auth.VerifyPassword(password, user.PasswordHash); err != nil {
+		t.Fatalf(
+			"created password hash does not match password: %v",
+			err,
+		)
+	}
+
+	if user.Role != "user" {
+		t.Fatalf(
+			"created user role = %q, want %q",
+			user.Role,
+			"user",
+		)
+	}
+
+	if users.createdUser.CreatedAt.Before(before) ||
+		users.createdUser.CreatedAt.After(after) {
+		t.Fatalf(
+			"created user CreatedAt = %v, outside expected range",
+			users.createdUser.CreatedAt,
+		)
+	}
+
+	if sessions.createdSession == nil {
+		t.Fatal("Register() did not create a session")
+	}
+
+	session := sessions.createdSession
+
+	if session.ID == "" {
+		t.Fatal("session ID is empty")
+	}
+
+	if session.FamilyID == "" {
+		t.Fatal("session family ID is empty")
+	}
+
+	if session.UserID != user.ID {
+		t.Fatalf(
+			"session.UserID = %q, want %q",
+			session.UserID,
+			user.ID,
+		)
+	}
+
+	if len(session.RefreshTokenHash) == 0 {
+		t.Fatal("session refresh-token hash is empty")
+	}
+
+	if !session.ExpiresAt.After(session.CreatedAt) {
+		t.Fatal("session expiration is not after creation")
+	}
+
+	if result.RefreshUntil.Before(before.Add(23*time.Hour)) ||
+		result.RefreshUntil.After(after.Add(25*time.Hour)) {
+		t.Fatalf(
+			"RefreshUntil = %v, outside expected range",
+			result.RefreshUntil,
+		)
+	}
 }
 
 func TestAuthServiceLogin(t *testing.T) {

@@ -40,7 +40,7 @@ func New(config config.Config) (*App, error) {
 
 	sessionRepo := postgres.NewSessionRepository(pool)
 
-	userService := service.NewUserService(userRepo)
+	userService := service.NewUserService(userRepo, sessionRepo)
 
 	authService, err := service.NewAuthService(
 		userRepo,
@@ -77,6 +77,10 @@ func New(config config.Config) (*App, error) {
 	mux.Handle(
 		"POST /auth/login",
 		handler.HandlerFunc(authHandler.Login),
+	)
+	mux.Handle(
+		"POST /auth/register",
+		handler.HandlerFunc(authHandler.Register),
 	)
 	mux.Handle(
 		"POST /auth/refresh",
